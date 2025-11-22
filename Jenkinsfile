@@ -7,7 +7,7 @@ pipeline {
         PIP       = "${VENV_DIR}/bin/pip"
 
         // You can adjust these for your MongoDB & secret
-        MONGO_URI  = "mongodb://localhost:27017/studentdb"
+        MONGO_URI  = "mongodb+srv://nikithabalaji143:Angel0507@nikitha.0qzb5fk.mongodb.net/"
         SECRET_KEY = "supersecretkey"
     }
 
