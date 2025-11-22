@@ -73,11 +73,31 @@ pipeline {
     post {
         success {
             echo 'Build and deployment succeeded!'
-            // email disabled for now (SMTP not configured)
+            mail to: 'nikithabalaji143@gmail.com',
+                 subject: "Jenkins Success: ${JOB_NAME} #${BUILD_NUMBER}",
+                 body: """Good news!
+
+The Jenkins job "${JOB_NAME}" build #${BUILD_NUMBER} completed SUCCESSFULLY.
+
+Repository: ${GIT_URL}
+Branch:    ${GIT_BRANCH}
+
+– Jenkins
+"""
         }
         failure {
             echo 'Build or deployment failed!'
-            // email disabled for now (SMTP not configured)
+            mail to: 'nikithabalaji143@gmail.com',
+                 subject: "Jenkins FAILED: ${JOB_NAME} #${BUILD_NUMBER}",
+                 body: """Oops!
+
+The Jenkins job "${JOB_NAME}" build #${BUILD_NUMBER} has FAILED.
+
+Please check the Jenkins console log for details:
+${BUILD_URL}console
+
+– Jenkins
+"""
         }
     }
 }
