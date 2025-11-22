@@ -2,19 +2,18 @@ pipeline {
     agent any
 
     environment {
-        VENV_DIR = "${WORKSPACE}/venv"
-        PYTHON   = "${VENV_DIR}/bin/python"
-        PIP      = "${VENV_DIR}/bin/pip"
+        VENV_DIR  = "${WORKSPACE}/venv"
+        PYTHON    = "${VENV_DIR}/bin/python"
+        PIP       = "${VENV_DIR}/bin/pip"
 
         // You can adjust these for your MongoDB & secret
-        MONGO_URI = "mongodb+srv://nikithabalaji143:Angel0507@nikitha.0qzb5fk.mongodb.net/"
+        MONGO_URI  = "mongodb://localhost:27017/studentdb"
         SECRET_KEY = "supersecretkey"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Jenkins will automatically use the repo you configure in the job
                 checkout scm
             }
         }
@@ -24,9 +23,15 @@ pipeline {
                 echo "Creating virtual environment and installing dependencies"
                 sh '''
                     set -e
-                    python3 -m venv "${VENV_DIR}"
-                    "${PIP}" install --upgrade pip
-                    "${PIP}" install -r requirements.txt
+                    # create venv
+                    python3 -m venv "$VENV_DIR"
+
+                    # install dependencies into that venv
+                    "$PIP" install --upgrade pip
+                    "$PIP" install -r requirements.txt
+
+                    # make sure pytest is installed in venv
+                    "$PIP" install pytest
                 '''
             }
         }
@@ -36,7 +41,9 @@ pipeline {
                 echo "Running unit tests with pytest"
                 sh '''
                     set -e
-                    "${VENV_DIR}/bin/pytest"
+                    # activate the venv and run pytest
+                    . "$VENV_DIR/bin/activate"
+                    pytest
                 '''
             }
         }
@@ -44,7 +51,6 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo "Deploying Flask app to staging environment"
-
                 sh '''
                     set -e
 
@@ -54,11 +60,11 @@ pipeline {
                     echo "Starting Flask app in background on port 8000"
 
                     # Export env vars for the app
-                    export MONGO_URI="${MONGO_URI}"
-                    export SECRET_KEY="${SECRET_KEY}"
+                    export MONGO_URI="$MONGO_URI"
+                    export SECRET_KEY="$SECRET_KEY"
 
                     # Start the app with nohup so it keeps running
-                    nohup "${PYTHON}" app.py > flask_app.log 2>&1 &
+                    nohup "$PYTHON" app.py > flask_app.log 2>&1 &
                 '''
             }
         }
@@ -67,31 +73,12 @@ pipeline {
     post {
         success {
             echo 'Build and deployment succeeded!'
-            mail to: 'your-email@example.com',
-                 subject: "Jenkins Success: ${JOB_NAME} #${BUILD_NUMBER}",
-                 body: """Good news!
-
-The Jenkins job "${JOB_NAME}" build #${BUILD_NUMBER} completed SUCCESSFULLY.
-
-Repository: ${GIT_URL}
-Branch:    ${GIT_BRANCH}
-
-– Jenkins
-"""
+            // email disabled for now (SMTP not configured)
         }
         failure {
             echo 'Build or deployment failed!'
-            mail to: 'your-email@example.com',
-                 subject: "Jenkins FAILED: ${JOB_NAME} #${BUILD_NUMBER}",
-                 body: """Oops!
-
-The Jenkins job "${JOB_NAME}" build #${BUILD_NUMBER} has FAILED.
-
-Please check the Jenkins console log for details:
-${BUILD_URL}console
-
-– Jenkins
-"""
+            // email disabled for now (SMTP not configured)
         }
     }
 }
+
