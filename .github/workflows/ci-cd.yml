@@ -44,11 +44,11 @@ jobs:
       - name: Prepare app for staging
         run: |
           echo "Simulating deployment to STAGING environment..."
-          mkdir -p ../deploy-staging
-          cp -r . ../deploy-staging/
+          # Create a tarball of the current repo contents
+          tar -czf deploy-staging.tar.gz .
 
       - name: Upload staging artifact
         uses: actions/upload-artifact@v4
         with:
           name: flask-staging
-          path: ../deploy-staging
+          path: deploy-staging.tar.gz
