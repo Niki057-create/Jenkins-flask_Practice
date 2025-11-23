@@ -122,50 +122,31 @@ env:
   MONGO_URI: ${{ secrets.MONGO_URI }}
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
 
-## Branch Strategy
 
-Branch			Purpose
-staging			CI/CD staging deployment tests
-main			Production deployment + release workflow
+## Branch Strategy and Release Workflow
 
+### Branches
 
-### Merge staging into main (critical step)
+| Branch  | Purpose                              |
+|---------|--------------------------------------|
+| `staging` | CI/CD staging deployment tests       |
+| `main`    | Production deployment + release flow |
+
+### Merging `staging` into `main` (critical step)
+
+1. Make sure your local `staging` branch is up to date:
+
+```bash
 git fetch --all
 git checkout staging
+git pull origin staging
 git push origin staging
 
+
+2. Merge staging into main:
 
 git checkout main
 git pull origin main
 git merge staging
-
-
 git push origin main
 
-
-## Production Deployment Trigger
-
-Go to GitHub → Releases → Draft a new release
-
-Tag example: v1.0.0
-
-Title: My First Production Release
-
-Click Publish release
-
-This runs the deploy-production job automatically.
-
-
-## Rerunning jobs
-
-In GitHub Actions UI, open any workflow → click Re-run all jobs when needed.
-
-📸 Workflow Example Result (Successful Run)
-
-Build & Test ✔️
-
-Deploy Staging ✔️
-
-Deploy Production ✔️
-
-Two artifacts visible in list: flask-staging & flask-production
