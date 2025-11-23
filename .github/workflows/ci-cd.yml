@@ -52,3 +52,25 @@ jobs:
           name: flask-staging
           path: deploy-staging.tar.gz
 
+  deploy-production:
+    needs: build-and-test
+    # Only run this when the workflow is triggered by a release event
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Prepare app for production
+        run: |
+          echo "Simulating deployment to PRODUCTION environment..."
+          # Create a tar.gz of the repo at the current release commit
+          git archive --format=tar.gz -o deploy-production.tar.gz HEAD
+
+      - name: Upload production artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flask-production
+          path: deploy-production.tar.gz
+
