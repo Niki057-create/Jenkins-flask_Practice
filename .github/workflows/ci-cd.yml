@@ -32,7 +32,6 @@ jobs:
       - name: Run tests
         run: pytest
 
-
   deploy-staging:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -44,10 +43,12 @@ jobs:
       - name: Prepare app for staging
         run: |
           echo "Simulating deployment to STAGING environment..."
-          tar -czf deploy-staging.tar.gz --exclude=deploy-staging.tar.gz .
+          # Create a tar.gz of the repo at the current commit (HEAD)
+          git archive --format=tar.gz -o deploy-staging.tar.gz HEAD
 
       - name: Upload staging artifact
         uses: actions/upload-artifact@v4
         with:
           name: flask-staging
           path: deploy-staging.tar.gz
+
