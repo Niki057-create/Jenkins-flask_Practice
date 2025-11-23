@@ -1,20 +1,17 @@
 name: CI/CD for Flask App
 
 on:
-  # Run when code is pushed to the staging branch
   push:
-    branches: [ "staging" ]
+    branches: ["staging"]
 
-  # Run when a release is published (for production deploy)
   release:
-    types: [ published ]
+    types: [published]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
     env:
-      # Use secrets so sensitive values are not in code
       MONGO_URI: ${{ secrets.MONGO_URI }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
 
@@ -31,35 +28,33 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest
 
       - name: Run tests
         run: pytest
 
   deploy-staging:
-  needs: build-and-test
-  runs-on: ubuntu-latest
+    needs: build-and-test
+    runs-on: ubuntu-latest
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Prepare app for staging
-      run: |
-        echo "Simulating deployment to STAGING environment..."
-        # Create a folder OUTSIDE the repo folder to avoid copying into itself
-        mkdir -p ../deploy-staging
-        cp -r . ../deploy-staging/
+      - name: Prepare app for staging
+        run: |
+          echo "Simulating deployment to STAGING environment..."
+          # Create a tar.gz of the repo at the current commit (HEAD)
+          git archive --format=tar.gz -o deploy-staging.tar.gz HEAD
 
-    - name: Upload staging artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: flask-staging
-        path: ../deploy-staging
+      - name: Upload staging artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flask-staging
+          path: deploy-staging.tar.gz
 
   deploy-production:
     needs: build-and-test
-    # Only run when a release is published
+    # Only run this when the workflow is triggered by a release event
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
 
@@ -70,12 +65,12 @@ jobs:
       - name: Prepare app for production
         run: |
           echo "Simulating deployment to PRODUCTION environment..."
-          echo "Release tag: ${{ github.event.release.tag_name }}"
-          mkdir -p deploy-production
-          cp -r * deploy-production/
+          # Create a tar.gz of the repo at the current release commit
+          git archive --format=tar.gz -o deploy-production.tar.gz HEAD
 
       - name: Upload production artifact
         uses: actions/upload-artifact@v4
         with:
-          name: flask-app-production
-          path: deploy-production/
+          name: flask-production
+          path: deploy-production.tar.gz
+
