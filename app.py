@@ -8,10 +8,11 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = os.getenv("MONGO_URI")
-app.secret_key = os.getenv("SECRET_KEY")
-
-mongo = PyMongo(app)
+if not app.config.get("TESTING"):  # 🔥 DB only loads if NOT in test mode
+    app.config["MONGO_URI"] = os.getenv("MONGO_URI")
+    mongo = PyMongo(app)
+else:
+    mongo = None   # placeholder when DB is not used during CI tests
 
 # Home page -> list students
 @app.route('/')
