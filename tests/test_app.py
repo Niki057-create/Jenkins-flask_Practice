@@ -1,8 +1,10 @@
-import sys, os
+import os
+import sys
 import pytest
+from unittest.mock import patch
 
-# Add project root to PYTHONPATH for Jenkins
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
 
 from app import app
 
@@ -14,7 +16,9 @@ def client():
         yield client
 
 
-def test_home_page_status_code(client):
+@patch("app.mongo")   # <-- mock the mongo object used in app.py
+def test_home_page_status_code(mock_mongo, client):
+    mock_mongo.db.students.find.return_value = []  # simulate empty DB
     response = client.get("/")
     assert response.status_code == 200
 
